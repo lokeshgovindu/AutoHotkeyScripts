@@ -151,7 +151,10 @@ WinSet, Transparent, 222
 
 ;~ Gosub, Display_Dim_Background
 Gosub, Display_List
-;~ AltTabWindows()
+Gosub, Gui_Resize_and_Position
+Gui_vx := Gui_CenterX()
+Gui, 1: Show, AutoSize x%Gui_vx% y%Gui_y%, %AppTitle%
+
 return
 
 Esc::
@@ -245,10 +248,10 @@ Display_List:
     GuiControl, +Redraw, ListView1
     LV_Modify(FocusedRowNumber, "Select Vis") ; get selected row and ensure selection is visible
 
-    Gosub, Gui_Resize_and_Position
+    ;~ Gosub, Gui_Resize_and_Position
 
-    Gui_vx := Gui_CenterX()
-    Gui, 1: Show, AutoSize x%Gui_vx% y%Gui_y%, %AppTitle%
+    ;~ Gui_vx := Gui_CenterX()
+    ;~ Gui, 1: Show, AutoSize x%Gui_vx% y%Gui_y%, %AppTitle%
 
     ; TURN ON INCREMENTAL SEARCH
     SetTimer, tIncrementalSearch, 500
