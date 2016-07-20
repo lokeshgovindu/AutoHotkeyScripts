@@ -1,34 +1,41 @@
 /*
- *=============================================================================
- * This is Lokesh Govindu's AutoHotkey script
- * Inspired from https://github.com/ralesi/alttab.ahk
- *=============================================================================
- */
+o-----------------------------------------------------------------------------o
+| Author : Lokesh Govindu                                                     |
+|  Email : lokeshgovindu@gmail.com                                            |
+| Inspired from https://github.com/ralesi/alttab.ahk                          |
+(-----------------------------------------------------------------------------)
+| Alt+Tab Alternative                  / A Script file for AutoHotkey 1.0.22+ |
+|                                     ----------------------------------------|
+| Details:                                                                    |
+|                                                                             |
+|                                                                             |
+o-----------------------------------------------------------------------------o
+*/
 
 #SingleInstance Force
-
 #Include CommonUtils.ahk
-
-; Include Class_Subclass.ahk to subclass edit
-#Include Class_Subclass.ahk
+#Include Class_Subclass.ahk ; Include Class_Subclass.ahk to subclass edit
 
 ;========================================================================================================
 ; Windows Messages
 
 WM_KEYDOWN := 0x100
+WM_KEYUP   := 0x101
 
 ;========================================================================================================
 ; USER EDITABLE SETTINGS:
 
-AppTitle := "Lokesh Govindu's Alt-Tab Replacement"
-NewEditSearchString = 
-FocusedRowNumber := 1
-; Ini Setting file
-Setting_INI_File = Alt_Tab_Settings.ini
+AppTitle := "Lokesh Govindu's Alt+Tab Alternative"
+NewEditSearchString  = 
+FocusedRowNumber    := 1
+Display_List_Shown  := 0
+CtrlBtnDown         := false
+NumberBtnDown       := false
+NumberBtnValue      := -1
 
 ; Icons
-Use_Large_Icons = 1         ; 0 = small icons, 1 = large icons in listview
-Listview_Resize_Icons = 0   ; Resize icons to fit listview area
+Use_Large_Icons         = 1     ; 0 = small icons, 1 = large icons in listview
+Listview_Resize_Icons   = 0     ; Resize icons to fit listview area
 
 ; Fonts
 Font_Size           = 11
@@ -39,7 +46,6 @@ Font_Color_ListView = ffffff
 Font_Style          = norm
 Font_Size_Tab       = 8
 Font_Type_Tab       = Consolas
-Font_Type           = Segoe UI
 Font_Type           = Lucida Handwriting
 
 ; Position
@@ -65,24 +71,22 @@ Tray_Icon := "Icon.ico"
 
 ; USER OVERRIDABLE SETTINGS:
 
-; Widths
-Col_1 = Auto    ; icon column
-Col_2 = 0       ; hidden column for row number
+; ListView Column Widths
+Col_1 = Auto        ; Icon Column
+Col_2 = 0           ; Row Number
 ; col 3 is autosized based on other column sizes
-Col_4 = Auto    ; exe
-;~ Col_5 = AutoHdr ; State
-;~ Col_6 = Auto    ; OnTop
-;~ Col_7 = Auto    ; Status - e.g. Not Responding
-Gui1_Tab__width := Listview_Width - 2
+Col_4 = Auto    ; Process Name
+
+Column_Title_List = #| |Window Title|Process Name
+StringSplit, Column_Title, Column_Title_List,| ; Create list of listview header titles
 
 ; Max height
 Height_Max := A_ScreenHeight * Height_Max_Modifier ; limit height of listview
 Small_to_Large_Ratio = 1.6 ; height of small rows compared to large rows
 
 ; Colours in RGB hex
-Tab_Colour = 1c1b1a
-Listview_Colour = 1c1b1a ; does not need converting as only used for background
-StatusBar_Background_Colour = 998899
+Tab_Colour      := 1c1b1a
+Listview_Colour := 1c1b1a ; does not need converting as only used for background
 
 ; convert colours to correct format for listview color functions:
 Listview_Colour_Max_Text            := RGBtoBGR("0xffffff") ; highlight minimised windows
@@ -101,9 +105,9 @@ Listview_Colour_Not_Responding_Back := RGBtoBGR("0xFF0000")
 ;========================================================================================================
 
 If A_PtrSize = 8
-  GetClassLong_API := "GetClassLongPtr"
+    GetClassLong_API := "GetClassLongPtr"
 else
-  GetClassLong_API := "GetClassLong"
+    GetClassLong_API := "GetClassLong"
 
 WS_EX_APPWINDOW = 0x40000   ; Provides a taskbar button
 WS_EX_TOOLWINDOW = 0x80     ; Removes the window from the alt-tab list
@@ -117,56 +121,80 @@ Else
 
 Use_Large_Icons_Current = %Use_Large_Icons% ; for remembering original user setting but changing on the fly
 
-;~ Col_Title_List =#| |Window|Exe|View|Top|Status
-;~ StringSplit, Col_Title, Col_Title_List,| ; Create list of listview header titles
-Column_Title_List = #| |Window Title|Process Name
-StringSplit, Column_Title, Column_Title_List,| ; Create list of listview header titles
+;========================================================================================================
+
+Gosub, Initiate_Hotkeys
+
+Return
 
 ;========================================================================================================
 
-Gui, 1: +AlwaysOnTop +ToolWindow -Caption +HwndMainWindowHwnd
-Gui, 1: Color, %Tab_Colour% ; i.e. border/background 
-Gui, 1: Margin, 0, 0
+Initiate_Hotkeys:
+    Print("[Sub] Initiate_Hotkeys")
+    Hotkey, ``, Alt_Tab_Alternative, On
+    Hotkey, Esc, ListView_Destroy, Off
+    Return
 
-Gui, 1: Font, s%Font_Size% c%Font_Color_Edit% %Font_Style%, %Font_Type%
-Gui, 1: Add, Edit, vEditSearchStringVar HwndEditSearchStringHwnd Center w%Listview_Width%
-FileAppend, EditSearchStringHwnd = [ %EditSearchStringHwnd% ]`n, *
+;========================================================================================================
 
-;~ Gui, 1: Add, ListView, x - 1 y + -4 w%Listview_Width% AltSubmit -Redraw -Multi NoSort Background%Listview_Colour% Count10 gListView_Event vListView1 HWNDListView1Hwnd, Name|Size (KB)
-;~ Gui, 1: Add, ListView, w%Listview_Width% AltSubmit -Redraw -Multi NoSort Background%Listview_Colour% Count10 gListView_Event vListView1 HWNDListView1Hwnd, Name|Size (KB)
+Alt_Tab_Alternative:
+    if (Display_List_Shown = 1) {
+        ; Window is already displayed
+        Return
+    }
+    Print("[Sub] Alt_Tab_Alternative Begin ---------------------------------------")
+    Gosub, Initialize_Defaults
+    Gosub, Create_Window
+    Gosub, Display_List
+    Gosub, Gui_Resize_and_Position
+    Gosub, Show_Window
+    Display_List_Shown = 1
+    Print("[Sub] Alt_Tab_Alternative End ---------------------------------------")
+    return
+    
+;========================================================================================================
+    
+Initialize_Defaults:
+    Print("Initialize_Defaults")
+    NewEditSearchString  = 
+    FocusedRowNumber    := 1
+    Display_List_Shown  := 0
+    CtrlBtnDown         := false
+    NumberBtnDown       := false
+    NumberBtnValue      := -1
+    Return
 
-Gui, 1: Font, s%Font_Size% c%Font_Color_ListView% %Font_Style%, %Font_Type%
-Gui, Add, ListView, w%Listview_Width% h200 AltSubmit +Redraw -Multi NoSort Background%Listview_Colour% Count10 gListView_Event vListView1 HwndListView1Hwnd, %Column_Title_List%
-Print("ListView1Hwnd = [" . ListView1Hwnd . "]")
+;========================================================================================================
 
-;~ LV_ModifyCol(2, "Integer") ; sort hidden column 2 as numbers
-;~ Gui, 1: Font, s%Font_Size_Tab% c%Font_Color% bold, %Font_Type_Tab%
-;~ Gui, 1: Add, Tab2, Bottom vGui1_Tab HWNDhw_Gui1_Tab w%Gui1_Tab__width% h22 -0x200 -Multi, %Group_List% ; -0x200 = ! TCS_MULTILINE
-Gui, 1: +LastFound
+Create_Window:
+    Print("[Sub] Create_Window")
+    Gui, 1: +AlwaysOnTop +ToolWindow -Caption +HwndMainWindowHwnd
+    Gui, 1: Color, %Tab_Colour% ; i.e. border/background 
+    Gui, 1: Margin, 0, 0
 
-WinSet, Transparent, 222
+    Gui, 1: Font, s%Font_Size% c%Font_Color_Edit% %Font_Style%, %Font_Type%
+    Gui, 1: Add, Edit, vEditSearchStringVar HwndEditSearchStringHwnd Center w%Listview_Width%
+    Print("EditSearchStringHwnd = [ " . EditSearchStringHwnd . "]")
 
-;~ Gosub, Gui_Resize_and_Position
-;~ Gosub, Gui_Resize_ListView_ColumnSize
+    Gui, 1: Font, s%Font_Size% c%Font_Color_ListView% %Font_Style%, %Font_Type%
+    Gui, Add, ListView, w%Listview_Width% h200 AltSubmit +Redraw -Multi NoSort +LV0x2 Background%Listview_Colour% Count10 gListView_Event vListView1 HwndListView1Hwnd, %Column_Title_List%
+    Print("ListView1Hwnd = [" . ListView1Hwnd . "]")
+    Gui, 1: +LastFound
+    WinSet, Transparent, 222
+    Return
 
-;~ Gui_vx := Gui_CenterX()
-;~ Gui, 1: Show, AutoSize x%Gui_vx% y%Gui_y%, %AppTitle%
-;~ Print("[Display_List] Calling Gui Show... at #124")
+;========================================================================================================
 
-;~ Gosub, Display_Dim_Background
-Gosub, Display_List
-Gosub, Gui_Resize_and_Position
-Gui_vx := Gui_CenterX()
-Gui, 1: Show, AutoSize x%Gui_vx% y%Gui_y%, %AppTitle%
+Show_Window:
+    Print("[Sub] Show_Window")
+    Gui_vx := Gui_CenterX()
+    Gui, 1: Show, AutoSize x%Gui_vx% y%Gui_y%, %AppTitle%
+    Return
 
-return
-
-Esc::
-GuiEscape:
-GuiClose:
-ExitApp
+;========================================================================================================
 
 Display_Dim_Background:
+    Print("[Sub] Display_Dim_Background")
     ; define background GUI to dim all active applications
     SysGet, Width, 78
     SysGet, Height, 79
@@ -184,8 +212,10 @@ Display_Dim_Background:
 
     return
     
+;========================================================================================================
 
 Display_List:
+    Print("[Sub] Display_List")
     LV_Delete()
     windowList =
     Window_Found_Count := 0
@@ -201,15 +231,17 @@ Display_List:
         ownerID := windowID := windowList%A_Index%
         
         Loop {
-            ownerID := Decimal_to_Hex( DllCall("GetWindow", "UInt", ownerID, "UInt", GW_OWNER))
-        } Until !Decimal_to_Hex( DllCall("GetWindow", "UInt", ownerID, "UInt", GW_OWNER))
+            ownerID := Decimal_to_Hex(DllCall("GetWindow", "UInt", ownerID, "UInt", GW_OWNER))
+        } Until !Decimal_to_Hex(DllCall("GetWindow", "UInt", ownerID, "UInt", GW_OWNER))
         
         ownerID := ownerID ? ownerID : windowID
         If (Decimal_to_Hex(DllCall("GetLastActivePopup", "UInt", ownerID)) = windowID) {
             WinGet, es, ExStyle, ahk_id %windowID%
             WinGetTitle, windowTitle, ahk_id %windowID%
             ;~ FileAppend, windowTitle = [%windowTitle%]`n, *
-            If (!((es & WS_EX_TOOLWINDOW) && !(es & WS_EX_APPWINDOW)) && !IsInvisibleWin10BackgroundAppWindow(windowID)) {
+            If (!((es & WS_EX_TOOLWINDOW) && !(es & WS_EX_APPWINDOW)) &&
+                !IsInvisibleWin10BackgroundAppWindow(windowID))
+            {
                 ;~ FileAppend, windowTitle = [%windowTitle%]`n, *
                 WinGetTitle, title, ahk_id %ownerID%
                 WinGet, procPath, ProcessPath, ahk_id %windowID%
@@ -217,71 +249,91 @@ Display_List:
                 
                 ;~ FileAppend, A_Index = [%A_Index%] title = [%title%]`, processName = [%procName%]`n, *
                 ;~ Print("NewEditSearchString = " . NewEditSearchString)
-                If (InStr(title, NewEditSearchString, false) != 0 or InStr(procName, NewEditSearchString, false) != 0) {
+                If (InStr(title, NewEditSearchString, false) != 0 or InStr(procName, NewEditSearchString, false) != 0)
+                {
                     Window_Found_Count += 1
                     Get_Window_Icon(windowID, Use_Large_Icons_Current)          ; (window id, whether to get large icons)
                     Window__Store_attributes(Window_Found_Count, windowID, "")  ; Index, wid, parent (or blank if none)
                     LV_Add("Icon" . Window_Found_Count, "", Window_Found_Count, title, procName)
+                    ;~ LV_Add("", "", Window_Found_Count, title, procName)
+                    ;~ result := LV_SetSI(ListView1Hwnd, Window_Found_Count, 3, Window_Found_Count)
+                    ;~ Print("result = " . result)
+                    ;~ LV_Add("Icon" . Window_Found_Count, "", Window_Found_Count, Window_Found_Count . ". " . title, procName)
+                    ;~ LV_Add(Window_Found_Count, "Icon" . Window_Found_Count, "", title, procName)
                 }
             }
         }
     }
 
-    ;~ LV_ModifyCol("Hdr")  ; Auto-adjust the column widths.
-    ;~ LV_ModifyCol()  ; Auto-size each column to fit its contents.
-    ;~ LV_ModifyCol(2, "Integer")  ; For sorting purposes, indicate that column 2 is an integer.
-    ;~ LV_ModifyCol(1, Listview_Column_TitleWidth - 10)
-    ;~ LV_ModifyCol(2, Listview_Column_ProcessNameWidth)
-
-  
 	; HANDLE WM_KEYDOWN EVENT TO SELECT THE ITEMS OF LISTBOX USING UP / DOWN KEYS FROM
 	; FILENAME EDIT CONTROL
 	OnMessage(WM_KEYDOWN, "OnKeyDown")
+	OnMessage(WM_KEYUP,   "OnKeyUp")
 
 	; SUBCLASS FILENAME EDIT CONTROL TO DISABLE THE UP/DOWN KEY EVENTS
 	Subclass.SetFunction(EditSearchStringHwnd, WM_KEYDOWN, "EditSearchString_WM_KEYDOWN")
 
-    ;~ Gui_vx := Gui_CenterX()
-    ;~ Print("Gui_vx = " . Gui_vx)
-    ;~ Gui, 1: Show, AutoSize x%Gui_vx% y%Gui_y%, %AppTitle%
-    ;~ Print("[Display_List] Calling Gui Show...")
-    ;~ GuiControl, Enable, ListView1
-    ; WinSet, Transparent,65 , ahk_id %ListView1Hwnd%
-    ; Winset, TransColor, %Tab_Colour% 150, ahk_id  %ListView1Hwnd%; i.e. border/background
-
     GuiControl, +Redraw, ListView1
     LV_Modify(FocusedRowNumber, "Select Vis") ; get selected row and ensure selection is visible
-
-    ;~ Gosub, Gui_Resize_and_Position
-
-    ;~ Gui_vx := Gui_CenterX()
-    ;~ Gui, 1: Show, AutoSize x%Gui_vx% y%Gui_y%, %AppTitle%
 
     ; TURN ON INCREMENTAL SEARCH
     SetTimer, tIncrementalSearch, 500
 
     Return
 
+;========================================================================================================
 
 ListView_Event:
     Critical, 50
-    ;~ If MButton_Clicked := 1 ; closing a window so don't process events
-        ;~ Return
-    If A_GuiEvent = DoubleClick ; activate clicked window
+    Print("A_GuiEvent = " . A_GuiEvent)
+    if A_GuiEvent = DoubleClick     ; DoubleClick
     {
-        ;~ Gosub, ListView_Destroy
-        ;~ LV_GetText(RowText, A_EventInfo)
-        ;~ ToolTip You double-clicked row number %A_EventInfo%. Text: "%RowText%"
+        LV_GetText(RowText, A_EventInfo)
+        ;~ ToolTip You double-clicked row number %A_EventInfo%. Text: "%RowText%"        
+        FocusedRowNumber := A_EventInfo
+        Print("FocusedRowNumber = " . FocusedRowNumber)
         windowID := Window%FocusedRowNumber%
         Print("Activating windowID = " . windowID)
+        Print("Activating windowTitle = " . WindowTitle%FocusedRowNumber%)
         WinActivate, ahk_id %windowID%
+        Gosub, ListView_Destroy
     }
-    ;~ If A_GuiEvent = K ; letter was pressed, select next window name starting with that letter
-        ;~ Gosub, Key_Pressed_1st_Letter
-    ;~ If A_GuiEvent = ColClick ; column was clicked - do custom sort to allow for sorting hidden column + remembering state
-        ;~ ColumnClickSort(A_EventInfo) ; A_EventInfo = column clicked on
+    if A_GuiEvent = Normal          ; Mouse left-click
+    {
+        LV_GetText(RowText, A_EventInfo)
+        ;~ ToolTip You double-clicked row number %A_EventInfo%. Text: "%RowText%"        
+        FocusedRowNumber := A_EventInfo
+        Print("FocusedRowNumber = " . FocusedRowNumber)
+        windowID := Window%FocusedRowNumber%
+        Print("Activating windowID = " . windowID)
+        Print("Activating windowTitle = " . WindowTitle%FocusedRowNumber%)
+        ;~ WinActivate, ahk_id %windowID%
+        ;~ Gosub, ListView_Destroy
+    }
+    if A_GuiEvent = I               ; Mouse left-click
+    {
+        LV_GetText(RowText, A_EventInfo)
+        ;~ ToolTip You double-clicked row number %A_EventInfo%. Text: "%RowText%"        
+        FocusedRowNumber := A_EventInfo
+        Print("FocusedRowNumber = " . FocusedRowNumber)
+        windowID := Window%FocusedRowNumber%
+        Print("Activating windowID = " . windowID)
+        Print("Activating windowTitle = " . WindowTitle%FocusedRowNumber%)
+        ;~ WinActivate, ahk_id %windowID%
+        ;~ Gosub, ListView_Destroy
+    }
     Return
 
+;========================================================================================================
+
+ListView_Destroy:
+    Print("[Sub] ListView_Destroy")
+    Gosub, Disable_Timers
+    Gui, 1: Destroy
+    Display_List_Shown := 0
+    Return
+    
+;========================================================================================================
 
 Gui_CenterX()
 {
@@ -439,47 +491,120 @@ tIncrementalSearch:
 
 ;=== BEGIN OnKeyDown SUBROUTINE =================================
 
-    ; Handle Up/Down when the are pressed in Filename Edit Control
-    ; Select the ListBox items or move the selection to up/down when
-    ;  Up/Down keys are pressed.
-    OnKeyDown(wParam, lParam, msg, hwnd) {
-        Global
-        ;~ Global EditSearchStringHwnd
-        ;~ Global ListView1
-        key := Format("vk{1:x}", wParam)
-        keyName := GetKeyName(key)
-        FileAppend, [OnKeyDown] wParam = [%wParam% %keyName%] lParam = [%lParam%] msg = [%msg%] hwnd = [%hwnd%]`n, *
+Disable_Timers:
+    SetTimer, tIncrementalSearch, Off
+    Return
+    
+;... END tIncrementalSearch EVENT ..........................
 
-        if (hwnd = EditSearchStringHwnd) {
-            ;~ FocusedRowNumber := LV_GetNext(0)  ; Find the focused row.
-            ;~ if (not FocusedRowNumber) { ; No row is focused.
-                ;~ FocusedRowNumber := 1
-                ;~ Print("[INFO] No row is focused")
-            ;~ }
-            nItems := LV_GetCount()
-            Print("FocusedRowNumber = " . FocusedRowNumber)            
-            ;~ FileAppend, [OnKeyDown] hwnd = EditSearchStringHwnd`n, *
-            if (wParam = GetKeyVK("Enter") and FocusedRowNumber <> 0) {
-                Print("Opening...")
-                windowID := Window%FocusedRowNumber%
-                ;~ Print("windowID = " . windowID)
-                WinActivate, ahk_id %windowID%
-                ExitApp
-            }
-            else if (wParam = GetKeyVK("Down")) {
-                FocusedRowNumber := (FocusedRowNumber >= nItems ? 1 : (FocusedRowNumber + 1))
-                LV_Modify(FocusedRowNumber, "Select Vis")
-                ;~ Print("LV_Modify")
-            }
-            else if (wParam = GetKeyVK("Up")) {
-                FocusedRowNumber := (FocusedRowNumber <= 1 ? nItems : (FocusedRowNumber - 1))
-                LV_Modify(FocusedRowNumber, "Select Vis")
-                ;~ Print("LV_Modify")
-            }            
-        }
+
+;=== BEGIN OnKeyDown SUBROUTINE =================================
+
+; Handle Up/Down when the are pressed in Filename Edit Control
+; Select the ListBox items or move the selection to up/down when
+;  Up/Down keys are pressed.
+OnKeyDown(wParam, lParam, msg, hwnd) {
+    Global
+    ;~ Global EditSearchStringHwnd
+    ;~ Global ListView1
+    key := Format("vk{1:x}", wParam)
+    keyName := GetKeyName(key)
+    FileAppend, [OnKeyDown] wParam = [%wParam% %keyName%] lParam = [%lParam%] msg = [%msg%] hwnd = [%hwnd%]`n, *
+
+    nItems := LV_GetCount()
+    if (wParam = GetKeyVK("Control")) {
+        CtrlBtnDown := true
+        Print("CtrlBtnDown := true")
+    }
+    else if (wParam >= 48 && wParam <= 57) {    ; Number Key (not Numpad key)
+        NumberBtnDown := true
+        NumberBtnValue := (keyName = 0 ? 10 : keyName)
+        Print("NumberBtnDown := true, NumberBtnValue = " . NumberBtnValue)
+    }
+    
+    if (CtrlBtnDown && NumberBtnDown && (NumberBtnValue >= 1 && NumberBtnValue <= 10)) {
+        Print("CtrlBtnDown && NumberBtnDown, NumberBtnValue = " . NumberBtnValue)
+        windowID := Window%NumberBtnValue%
+        ;~ Print("windowID = " . windowID)
+        WinActivate, ahk_id %windowID%
+        Gosub, ListView_Destroy
     }
 
+    if (hwnd = EditSearchStringHwnd) {
+        ;~ FocusedRowNumber := LV_GetNext(0)  ; Find the focused row.
+        ;~ if (not FocusedRowNumber) { ; No row is focused.
+            ;~ FocusedRowNumber := 1
+            ;~ Print("[INFO] No row is focused")
+        ;~ }
+        nItems := LV_GetCount()
+        Print("Current FocusedRowNumber = " . FocusedRowNumber)
+        ;~ FileAppend, [OnKeyDown] hwnd = EditSearchStringHwnd`n, *
+        if (wParam = GetKeyVK("Enter") and FocusedRowNumber <> 0) {
+            Print("Opening...")
+            windowID := Window%FocusedRowNumber%
+            ;~ Print("windowID = " . windowID)
+            WinActivate, ahk_id %windowID%
+            Gosub, ListView_Destroy
+        }
+        else if (wParam = GetKeyVK("Down")) {
+            FocusedRowNumber := (FocusedRowNumber >= nItems ? 1 : (FocusedRowNumber + 1))
+            LV_Modify(FocusedRowNumber, "Select Vis")
+            ;~ Print("LV_Modify")
+        }
+        else if (wParam = GetKeyVK("Up")) {
+            FocusedRowNumber := (FocusedRowNumber <= 1 ? nItems : (FocusedRowNumber - 1))
+            LV_Modify(FocusedRowNumber, "Select Vis")
+            ;~ Print("LV_Modify")
+        }
+        else if (wParam = GetKeyVK("Esc")) {
+            Print("[OnKeyDown] Esc key pressed.")
+            Gosub, ListView_Destroy
+        }
+        Print("New FocusedRowNumber = " . FocusedRowNumber)
+    }
+    else if (hwnd = ListView1Hwnd) {
+        nItems := LV_GetCount()
+        Print("Current FocusedRowNumber = " . FocusedRowNumber)
+        if (wParam = GetKeyVK("Esc")) {
+            Print("[OnKeyDown] ListView1Hwnd: Esc key pressed.")
+            Gosub, ListView_Destroy
+        }
+        else if (wParam = GetKeyVK("Enter") and FocusedRowNumber <> 0) {
+            Print("Opening...")
+            windowID := Window%FocusedRowNumber%
+            ;~ Print("windowID = " . windowID)
+            WinActivate, ahk_id %windowID%
+            Gosub, ListView_Destroy
+        }
+        else if (wParam = GetKeyVK("Down")) {
+            FocusedRowNumber := (FocusedRowNumber >= nItems ? 1 : (FocusedRowNumber + 1))
+            LV_Modify(FocusedRowNumber, "Select Vis")
+            Print("LV_Modify")
+        }
+        else if (wParam = GetKeyVK("Up")) {
+            FocusedRowNumber := (FocusedRowNumber <= 1 ? nItems : (FocusedRowNumber - 1))
+            LV_Modify(FocusedRowNumber, "Select Vis")
+            Print("LV_Modify")
+        }
+        Print("New FocusedRowNumber = " . FocusedRowNumber)
+    }
+}
+
 ;... END OnKeyDown SUBROUTINE ...................................
+
+
+;=== BEGIN OnKeyUp SUBROUTINE =================================
+
+OnKeyUp(wParam, lParam, msg, hwnd) {
+    Global
+    ;~ Global EditSearchStringHwnd
+    ;~ Global ListView1
+    key := Format("vk{1:x}", wParam)
+    keyName := GetKeyName(key)
+    FileAppend, [OnKeyUp] wParam = [%wParam% %keyName%] lParam = [%lParam%] msg = [%msg%] hwnd = [%hwnd%]`n, *
+}
+
+;... END OnKeyUp SUBROUTINE ...................................
 
 
 ;=== BEGIN EditSearchString_WM_KEYDOWN SUBROUTINE =================================
@@ -490,7 +615,7 @@ tIncrementalSearch:
 EditSearchString_WM_KEYDOWN(Hwnd, Message, wParam, lParam) {
 	key := Format("vk{1:x}", wParam)
 	keyName := GetKeyName(key)
-	FileAppend, [Filename_WM_KEYDOWN] wParam = [%wParam% %keyName%] lParam = [%lParam%] msg = [%Message%] hwnd = [%hwnd%]`n, *
+	FileAppend, [EditSearchString_WM_KEYDOWN] wParam = [%wParam% %keyName%] lParam = [%lParam%] msg = [%Message%] hwnd = [%hwnd%]`n, *
 	if (wParam = GetKeyVK("Down") or wParam = GetKeyVK("Up")) {
 		return False	; Prevent default message processing
 	}
@@ -683,6 +808,25 @@ IsInvisibleWin10BackgroundAppWindow(hWindow) {
     result := NumGet(cloakedVal) ; omitting the "&" performs better
     return result ? true : false
 }
+
+;=== BEGIN NewFunc SUBROUTINE =================================
+
+LV_SetSI(hList, iItem, iSubItem, iImage) {
+    Print("LV_SetSI")
+	VarSetCapacity(LVITEM, 13 * 4 + 2 + A_PtrSize, 0)
+	LVM_SETITEM := 0x1006, mask := 2    ; LVIF_IMAGE := 0x2
+	iItem-- , iSubItem-- , iImage--		; Note first column (iSubItem) is #ZERO, hence adjustment
+	NumPut(mask, LVITEM, 0, "UInt")
+	NumPut(iItem, LVITEM, 4, "Int")
+	NumPut(iSubItem, LVITEM, 8, "Int")
+	NumPut(iImage, LVITEM, 28 + A_PtrSize, "Int")
+	result := DllCall("SendMessage", UInt, hList, UInt, LVM_SETITEM, UInt, 0, UInt, &LVITEM)
+	SendMessage, LVM_SETITEM, -1, &LVITEM, , ahk_id %hList%
+	return result
+}
+
+;... END NewFunc SUBROUTINE ...................................
+
 
 ;=== BEGIN NewFunc SUBROUTINE =================================
 ;... END NewFunc SUBROUTINE ...................................
