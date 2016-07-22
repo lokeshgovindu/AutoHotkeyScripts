@@ -1,42 +1,68 @@
 /*
- * This is Lokesh Govindu's AutoHotkey script
- */
+o-----------------------------------------------------------------------------o
+| Author : Lokesh Govindu                                                     |
+|  Email : lokeshgovindu@gmail.com                                            |
+(-----------------------------------------------------------------------------)
+| Common utility functions             / A Script file for AutoHotkey 1.0.22+ |
+|                                     ----------------------------------------|
+| Details:                                                                    |
+| --------                                                                    |
+|                                                                             |
+o-----------------------------------------------------------------------------o
+*/
 
 #SingleInstance Force
 SetTitleMatchMode RegEx
 
 ; Using #Include to Share Functions Among Multiple
 
+;------------------------------------------------------------------------------
+; Methods to Write on stdout/console
+;------------------------------------------------------------------------------
 
 Print(a) {
-	FileAppend, %a%`n, *
+	FormatTime, CurrentTime, , yyyy-MM-dd HH:mm:ss
+	FileAppend, [%CurrentTime%] %a%`n, *
 }
 
 Print1(a) {
-	FileAppend, %a%`n, *
+	FormatTime, CurrentTime, , yyyy-MM-dd HH:mm:ss
+	FileAppend, [%CurrentTime%] %a%`n, *
 }
 
 Print2(a, b) {
-	FileAppend, %a%`, %b%`n, *
+	FormatTime, CurrentTime, , yyyy-MM-dd HH:mm:ss
+	FileAppend, [%CurrentTime%] %a%`, %b%`n, *
 }
 
 Print3(a, b, c) {
-	FileAppend, %a%`, %b%`, %c%`n, *
+	FormatTime, CurrentTime, , yyyy-MM-dd HH:mm:ss
+	FileAppend, [%CurrentTime%] %a%`, %b%`, %c%`n, *
 }
 
 Print4(a, b, c, d) {
-	FileAppend, %a%`, %b%`, %c%`, %d%`n, *
+	FormatTime, CurrentTime, , yyyy-MM-dd HH:mm:ss
+	FileAppend, [%CurrentTime%] %a%`, %b%`, %c%`, %d%`n, *
 }
 
-
-;-------------------------------------------------------------------------------
-; MouseIsOver
-;-------------------------------------------------------------------------------
-MouseIsOver(WinTitle) {
-    MouseGetPos, , , Win
-    return WinExist(WinTitle . " ahk_id " . Win)
+PrintKV(strA, valA) {
+	FormatTime, CurrentTime, , yyyy-MM-dd HH:mm:ss
+	FileAppend, [%CurrentTime%] %strA% = [%valA%]`n, *
 }
 
+PrintKV1(strA, valA) {
+	FormatTime, CurrentTime, , yyyy-MM-dd HH:mm:ss
+	FileAppend, [%CurrentTime%] %strA% = [%valA%]`n, *
+}
+
+PrintKV2(strA, valA, strB, valB) {
+	FormatTime, CurrentTime, , yyyy-MM-dd HH:mm:ss
+	FileAppend, [%CurrentTime%] %strA% = [%valA%]`, %strB% = [%valB%]`n, *
+}
+
+PrintSub(name) {
+	Print("[Sub] " . name)
+}
 
 ;------------------------------------------------------------------------------
 ; This funciton returns the JAVA_HOME directory path.
@@ -67,6 +93,15 @@ JavaHomeGet() {
         }
     }
     return JavaHome
+}
+
+
+;------------------------------------------------------------------------------
+; MouseIsOver
+;------------------------------------------------------------------------------
+MouseIsOver(WinTitle) {
+	MouseGetPos,,, Win
+	return WinExist(WinTitle . " ahk_id " . Win)
 }
 
 
