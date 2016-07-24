@@ -383,6 +383,54 @@ Return
 
 ;========================================================================================================
 
+ConstructWindowsList:
+    PrintSub("ConstructWindowsList")
+    windowList =
+    Window_Found_Count := 0
+    
+    DetectHiddenWindows, Off ; makes DllCall("IsWindowVisible") unnecessary
+    
+    ImageListID1 := IL_Create(10, 5, UseLargeIconsCurrent) ; Create an ImageList so that the ListView can display some icons
+    LV_SetImageList(ImageListID1, 1)    ; Attach the ImageLists to the ListView so that it can later display the icons
+    
+    WinGet, windowList, List ; gather a list of running programs
+    Loop, %windowList%
+    {
+        ownerID := windowID := windowList%A_Index%
+        
+        Loop {
+            ownerID := DecimalToHex(DllCall("GetWindow", "UInt", ownerID, "UInt", GW_OWNER))
+        } Until !DecimalToHex(DllCall("GetWindow", "UInt", ownerID, "UInt", GW_OWNER))
+        
+        ownerID := ownerID ? ownerID : windowID
+        If (DecimalToHex(DllCall("GetLastActivePopup", "UInt", ownerID)) = windowID) {
+            WinGet, es, ExStyle, ahk_id %windowID%
+            WinGetTitle, windowTitle, ahk_id %windowID%
+            ;~ FileAppend, windowTitle = [%windowTitle%]`n, *
+            If (!((es & WS_EX_TOOLWINDOW) && !(es & WS_EX_APPWINDOW)) &&
+                !IsInvisibleWin10BackgroundAppWindow(windowID))
+            {
+                ;~ FileAppend, windowTitle = [%windowTitle%]`n, *
+                WinGetTitle, title, ahk_id %ownerID%
+                WinGet, procPath, ProcessPath, ahk_id %windowID%
+                WinGet, procName, ProcessName, ahk_id %windowID%
+                
+                ;~ FileAppend, A_Index = [%A_Index%] title = [%title%]`, processName = [%procName%]`n, *
+                ;~ Print("CurSearchString = " . CurSearchString)
+                If (InStr(title, CurSearchString, false) != 0 or InStr(procName, CurSearchString, false) != 0)
+                {
+                    Window_Found_Count += 1
+                    GetWindowIcon(windowID, UseLargeIconsCurrent)          ; (window id, whether to get large icons)
+                    WindowStoreAttributes(Window_Found_Count, windowID, "")  ; Index, wid, parent (or blank if none)
+                    ;~ LV_Add("Icon" . Window_Found_Count, "", Window_Found_Count, title, procName)
+                }
+            }
+        }
+    }
+Return
+
+;========================================================================================================
+
 ListViewEvent:
     Critical, 50
     PrintSub("ListViewEvent")
@@ -411,18 +459,18 @@ ListViewEvent:
         ;~ WinActivate, ahk_id %windowID%
         ;~ Gosub, ListView_Destroy
     }
-    if A_GuiEvent = I               ; Item Changed
-    {
-        LV_GetText(RowText, A_EventInfo)
+    ;~ if A_GuiEvent = I               ; Item Changed
+    ;~ {
+        ;~ LV_GetText(RowText, A_EventInfo)
         ;~ ToolTip You double-clicked row number %A_EventInfo%. Text: "%RowText%"        
-        SelectedRowNumber := A_EventInfo
-        Print("[A_GuiEvent = I] SelectedRowNumber = " . SelectedRowNumber)
+        ;~ SelectedRowNumber := A_EventInfo
+        ;~ Print("[A_GuiEvent = I] SelectedRowNumber = " . SelectedRowNumber)
         ;~ windowID := Window%SelectedRowNumber%
         ;~ Print("Activating windowID = " . windowID)
         ;~ Print("Activating windowTitle = " . WindowTitle%SelectedRowNumber%)
         ;~ WinActivate, ahk_id %windowID%
         ;~ Gosub, ListView_Destroy
-    }
+    ;~ }
     if A_GuiEvent = K
     {
         key := GetKeyName(Format("vk{:x}", A_EventInfo))
@@ -437,6 +485,33 @@ ListViewEvent:
             Gosub, AltShiftTabAlternative
             Return
         }
+        else if (vkCode = GetKeyVK("NumpadHome")) { ; NumpadHome - 36
+            SelectedRowNumber = 1
+            LV_Modify(SelectedRowNumber, "Select Vis Focus")
+            Return
+        }
+        else if (vkCode = GetKeyVK("NumpadEnd")) {  ; NumpadEnd - 35
+            SelectedRowNumber := Window_Found_Count
+            LV_Modify(SelectedRowNumber, "Select Vis Focus")
+            Return
+        }
+        else if (vkCode = GetKeyVK("NumpadDel")) {  ; NumpadDel - 46
+            Print("NumpadDel pressed")
+            GetSelectedRowInfo()
+            Print("[A_GuiEvent] SelectedRowNumber = " . SelectedRowNumber)
+            windowID := Window%SelectedRowNumber%
+            Print("Activating windowID = " . windowID)
+            Print("Activating windowTitle = " . WindowTitle%SelectedRowNumber%)
+            WinClose, ahk_id %windowID%
+            LV_Delete(SelectedRowNumber)
+            if (SelectedRowNumber = Window_Found_Count) {
+                SelectedRowNumber := Window_Found_Count - 1
+            }
+            PrintKV("Selecting SelectedRowNumber", SelectedRowNumber)
+            LV_Modify(SelectedRowNumber, "Select Vis Focus")
+            Gosub, ConstructWindowsList
+            Return
+        }
         
         ; Always getting lower case letters even the capslock is turned on
         ; Hence, no need to check for upper case letters.
@@ -449,8 +524,8 @@ ListViewEvent:
             NewSearchString := SubStr(NewSearchString, 1, StrLen(NewSearchString) - 1)
         }
         ;~ PrintKV("[ListViewEvent] NewSearchString", NewSearchString)
-        SB_SetText("SearchString: " . NewSearchString)
-        ControlSetText, Static1, Search String: %NewSearchString%
+        ;~ SB_SetText("SearchString: " . NewSearchString)
+        ;~ ControlSetText, Static1, Search String: %NewSearchString%
     }
 Return
 
@@ -487,6 +562,7 @@ ListViewDestroy:
     Gui, 1: Default
     Gosub, DisableTimers
     if (AltEscPressed != 1) {
+        GetSelectedRowInfo()
         Print("SelectedRowNumber = " . SelectedRowNumber)
         windowID := Window%SelectedRowNumber%
         Print("Activating windowID = " . windowID)`
@@ -550,6 +626,7 @@ WindowStoreAttributes(index, windowsID, ID_Parent)
 GetSelectedRowInfo()
 {
     Global
+    PrintSub("GetSelectedRowInfo")
     
     SelectedRowNumber := LV_GetNext(0, "F")
     PrintKV("[GetSelectedRowInfo] SelectedRowNumber", SelectedRowNumber)
