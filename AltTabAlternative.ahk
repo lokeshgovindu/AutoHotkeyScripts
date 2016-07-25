@@ -16,9 +16,6 @@ o-----------------------------------------------------------------------------o
 |-----------------------------------------------------------------------------|
 | Keys                 | Description                                          |
 |----------------------+------------------------------------------------------|
-| Alt+Tab              | Brings the AltTab main window                        |
-| Alt+Shift+Tab        | Brings the AltTab main window                        |
-|----------------------+------------------------------------------------------|
 | Home/PageUp          | Move selection to first row                          |
 | End/PageDown         | Move selection to last row                           |
 | Up                   | Move selection to previous row                       |
@@ -42,13 +39,15 @@ o-----------------------------------------------------------------------------o
 | * Process is terminated on pressing Del key instead of default action on    |
 |   that window. Ex: Skype, Cicso Jabber.                                     |
 | * SearchString is "empty" initially, when you press Alt+Tab & Alt+Shift+Tab |
-|   search string becomes "". (here quotes for clarity)                       |
+|   search string becomes "". (here quotes for clarity).                      |
+| * Press Alt+Tab next Alt+Shift+Tab and press Del and observe process killed |
+|   using taskkill command forcefully, actually it shouldn't.                 |
 |                                                                             |
 | TODO Tasks:                                                                 |
 | -----------                                                                 |
-| * Never kill a process that is having explorer.exe as a child               |
-| * Alt+Esc to be handled                                                     |
-| * Ctrl+Num to activate the window(num) directly and close Alt+Tab window    |
+| * Never kill a process that is having explorer.exe as a child.              |
+| * Alt+Esc to be handled.                                                    |
+| * Ctrl+Num to activate the window(num) directly and close Alt+Tab window.   |
 |                                                                             |
 o-----------------------------------------------------------------------------o
 */
@@ -480,23 +479,27 @@ ListViewEvent:
         ; NumpadDown - 40
         if (vkCode = GetKeyVK("NumpadDown")) {
             Gosub, AltTabAlternative
+            LVE_VkCodePrev := vkCode
             Return
         }
         ; NumpadUp - 38
         else if (vkCode = GetKeyVK("NumpadUp")) {
             Gosub, AltShiftTabAlternative
+            LVE_VkCodePrev := vkCode
             Return
         }
         ; NumpadHome - 36, NumpadPgUp - 33
         else if (vkCode = GetKeyVK("NumpadHome") or vkCode = GetKeyVK("NumpadPgUp")) {
             SelectedRowNumber = 1
             LV_Modify(SelectedRowNumber, "Select Vis Focus")
+            LVE_VkCodePrev := vkCode
             Return
         }
         ; NumpadEnd - 35, NumpadPgDn - 34
         else if (vkCode = GetKeyVK("NumpadEnd") or vkCode = GetKeyVK("NumpadPgDn")) {
             SelectedRowNumber := Window_Found_Count
             LV_Modify(SelectedRowNumber, "Select Vis Focus")
+            LVE_VkCodePrev := vkCode
             Return
         }
         else if (vkCode = GetKeyVK("NumpadDel")) {  ; NumpadDel - 46
@@ -538,6 +541,7 @@ ListViewEvent:
             ;~ LV_Modify(SelectedRowNumber, "Select Vis Focus")
             Gosub, DisplayList
             WinActivate, ahk_id %MainWindowHwnd%
+            LVE_VkCodePrev := vkCode
             Return
         }
         
