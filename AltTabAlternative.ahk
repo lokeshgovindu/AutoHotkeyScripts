@@ -46,6 +46,7 @@ o-----------------------------------------------------------------------------o
 |                                                                             |
 | TODO Tasks:                                                                 |
 | -----------                                                                 |
+| * Never kill a process that is having explorer.exe as a child               |
 | * Alt+Esc to be handled                                                     |
 | * Ctrl+Num to activate the window(num) directly and close Alt+Tab window    |
 |                                                                             |
