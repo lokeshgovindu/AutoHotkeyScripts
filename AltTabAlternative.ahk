@@ -501,21 +501,23 @@ ListViewEvent:
             GetSelectedRowInfo()
             Print("[A_GuiEvent] SelectedRowNumber = " . SelectedRowNumber)
             windowID := Window%SelectedRowNumber%
-            Print("Activating windowID = " . windowID)
-            Print("Activating windowTitle = " . WindowTitle%SelectedRowNumber%)
+            exeName := Exe_Name%SelectedRowNumber%
+            Print("   windowID = " . windowID)
+            Print("windowTitle = " . WindowTitle%SelectedRowNumber%)
+            Print("    exeName = " . exeName)
+            explorerName = "explorer.exe"
             
             ; Focus will be lost from Alt+Tab main window and it may ask to save data
             ; if we specify a waittime, so it is better to not to wait.
-            if (LVE_VkCodePrev = GetKeyVK("Shift")) {
+            ; *** Never kill explorer.exe forcefully
+            if (exeName <> "explorer.exe" && LVE_VkCodePrev = GetKeyVK("Shift")) {
                 Print("Shift+Del pressed")
                 ;~ WinKill, ahk_id %windowID%
                 procID := PID%SelectedRowNumber%
                 PrintKV("Forcefully kill PID = ", procID)
                 KillCmd := "TASKKILL /PID " . procID . " /T /F"
                 PrintKV("KillCmd", KillCmd)
-                ;~ Run, %ComSpec% /C %KillCmd%
                 RunWait, %KillCmd%, , Hide
-                Print("After executing RunCmd")
             }
             else {
                 Print("NumpadDel pressed")
