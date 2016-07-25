@@ -38,8 +38,6 @@ o-----------------------------------------------------------------------------o
 | -------------                                                               |
 | * Process is terminated on pressing Del key instead of default action on    |
 |   that window. Ex: Skype, Cicso Jabber.                                     |
-| * SearchString is "empty" initially, when you press Alt+Tab & Alt+Shift+Tab |
-|   search string becomes "". (here quotes for clarity).                      |
 | * Press Alt+Tab next Alt+Shift+Tab and press Del and observe process killed |
 |   using taskkill command forcefully, actually it shouldn't.                 |
 |                                                                             |
@@ -66,7 +64,7 @@ WM_KEYUP   := 0x101
 ;========================================================================================================
 ; USER EDITABLE SETTINGS:
 
-AppTitle := "Lokesh Govindu's Alt+Tab Alternative"
+AppTitle            := "Lokesh Govindu's Alt+Tab Alternative"
 CurSearchString     := ""
 NewSearchString     := ""
 DisplayListShown    := 0
@@ -559,7 +557,8 @@ ListViewEvent:
         }
         ;~ PrintKV("[ListViewEvent] NewSearchString", NewSearchString)
         ;~ SB_SetText("SearchString: " . NewSearchString)
-        ControlSetText, Static1, Search String: %NewSearchString%
+        SearchStringText := (NewSearchString = "" ? "Search String: empty" : "Search String: " . NewSearchString)
+        ControlSetText, Static1, %SearchStringText%
         
         LVE_VkCodePrev := vkCode
     }
