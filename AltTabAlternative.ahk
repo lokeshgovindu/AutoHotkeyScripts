@@ -4,12 +4,12 @@ o-----------------------------------------------------------------------------o
 |  Email : lokeshgovindu@gmail.com                                            |
 | Inspired from https://github.com/ralesi/alttab.ahk                          |
 (-----------------------------------------------------------------------------)
-| Alt+Tab Alternative                  / A Script file for AutoHotkey 1.0.22+ |
+| Alt+Tab Alternative                  / A Script file for AutoHotkey 1.1.23+ |
 |                                     ----------------------------------------|
 |                                                                             |
 | Details:                                                                    |
 | --------                                                                    |
-| Use Alt+Tab / Alt+Shift+Tab to bring the main AltTab window use Tab key to  |
+| Use Alt+Tab / Alt+Shift+Tab to bring the main AltTab window, use            |
 |        Tab key to select next row                                           |
 |  Shift+Tab key to select previous row                                       |
 |                                                                             |
@@ -37,15 +37,15 @@ o-----------------------------------------------------------------------------o
 |                                                                             |
 | TODO Tasks:                                                                 |
 | -----------                                                                 |
-| * Implement Shift+Del to forcefully terminate the process                   |
+| * Shift+Del to forcefully terminate the process                             |
+| * Ctrl+Num to activate the window(num) directly and close Alt+Tab window    |
 |                                                                             |
 o-----------------------------------------------------------------------------o
 */
 
-#SingleInstance Force
-
 #Include CommonUtils.ahk
 
+#SingleInstance Force
 #InstallKeybdHook
 
 ;========================================================================================================
@@ -140,20 +140,6 @@ UseLargeIconsCurrent = %UseLargeIcons% ; for remembering original user setting b
 
 ;========================================================================================================
 
-; Hotkeys version
-;~ Gosub, InitiateHotkeys
-;~ Return
-
-; Testing version, as this is easy for testing
-;~ Gosub, AltTabAlternative
-;~ Return
-
-
-;~ GuiEscape:
-;~ GuiClose:
-    ;~ ExitApp
-
-
 ; Alt+Tab Hotkey version
 Gosub, InitiateHotkeys
 Return
@@ -176,12 +162,6 @@ InitiateHotkeys:
     ;~ Hotkey, %AltHotkey%%EscHotKey%, AltEsc, Off
     Hotkey, %AltHotkey%%TabHotkey%, AltTabAlternative, On
     Hotkey, %AltHotkey%%ShiftTabHotkey%, AltShiftTabAlternative, On
-
-    ;~ Hotkey, Esc, ListViewDestroy, Off
-
-    ; Version 1
-    ;~ Hotkey, ``, AltTabAlternative, On
-    ;~ Hotkey, Esc, ListViewDestroy, Off
 Return
 
 ;========================================================================================================
@@ -197,25 +177,6 @@ Return
 AltTabAlternative:
     PrintSub("AltTabAlternative")
     AltTabCommonFunction(1)
-    ;~ PrintSub("AltTabAlternative Begin ---------------------------------------")
-    ;~ if (DisplayListShown = 1) {        
-        ;~ ; Window is already displayed
-        ;~ Print("Window is already displayed")
-        ;~ PrintKV("MainWindowHwnd = ", MainWindowHwnd)
-        ;~ WinActivate, ahk_id %MainWindowHwnd%
-        ;~ Return
-    ;~ }
-
-    ;~ ; Check for Alt Up 
-    ;~ SetTimer, CheckAltHotkeyUp, 40    
-    
-    ;~ Gosub, InitializeDefaults
-    ;~ Gosub, CreateWindow
-    ;~ Gosub, DisplayList
-    ;~ Gosub, GuiResizeAndPosition
-    ;~ Gosub, ShowWindow
-    ;~ DisplayListShown = 1
-    ;~ PrintSub("AltTabAlternative End ---------------------------------------")
 Return
     
 ;========================================================================================================
@@ -256,9 +217,6 @@ AltTabCommonFunction(direction)
     }
     PrintKV("SelectedRowNumber", SelectedRowNumber)
     LV_Modify(SelectedRowNumber, "Select Vis Focus") ; Get selected row and ensure selection & focus is visible
-    ;~ GuiControl, +Redraw, ListView1    
-    ;~ Gosub, DisplayList
-    
     Return
 }
 
