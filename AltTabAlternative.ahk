@@ -6,8 +6,38 @@ o-----------------------------------------------------------------------------o
 (-----------------------------------------------------------------------------)
 | Alt+Tab Alternative                  / A Script file for AutoHotkey 1.0.22+ |
 |                                     ----------------------------------------|
-| Details:                                                                    |
 |                                                                             |
+| Details:                                                                    |
+| --------                                                                    |
+| Use Alt+Tab / Alt+Shift+Tab to bring the main AltTab window use Tab key to  |
+|        Tab key to select next row                                           |
+|  Shift+Tab key to select previous row                                       |
+|                                                                             |
+|-----------------------------------------------------------------------------|
+| Keys                 | Description                                          |
+|----------------------+------------------------------------------------------|
+| Alt+Tab              | Brings the AltTab main window                        |
+| Alt+Shift+Tab        | Brings the AltTab main window                        |
+|----------------------+------------------------------------------------------|
+| Home/PageUp          | Move selection to first row                          |
+| End/PageDown         | Move selection to last row                           |
+| Up                   | Move selection to previous row                       |
+| Down                 | Move selection to next row                           |
+|----------------------+------------------------------------------------------|
+| Del                  | Terminate currently selected process                 |
+|----------------------+------------------------------------------------------|
+| AlphaNumeric         | Filter windows while typing                          |
+|-----------------------------------------------------------------------------|
+|                                                                             |
+| Known issues:                                                               |
+| -------------                                                               |
+| * Lost focus from main window when Del key was pressed on unsaved document  |
+|   Window, user has to respond to the Save/Don't Save/Cancel dialog then     |
+|   only Alt+Tab window can be closed from Pop up window menu (Alt+Space)     |
+|                                                                             |
+| TODO Tasks:                                                                 |
+| -----------                                                                 |
+| * Implement Shift+Del to forcefully terminate the process                   |
 |                                                                             |
 o-----------------------------------------------------------------------------o
 */
@@ -486,12 +516,12 @@ ListViewEvent:
             Gosub, AltShiftTabAlternative
             Return
         }
-        else if (vkCode = GetKeyVK("NumpadHome")) { ; NumpadHome - 36
+        else if (vkCode = GetKeyVK("NumpadHome") or vkCode = GetKeyVK("NumpadPgUp")) { ; NumpadHome - 36, NumpadPgUp - 33
             SelectedRowNumber = 1
             LV_Modify(SelectedRowNumber, "Select Vis Focus")
             Return
         }
-        else if (vkCode = GetKeyVK("NumpadEnd")) {  ; NumpadEnd - 35
+        else if (vkCode = GetKeyVK("NumpadEnd") or vkCode = GetKeyVK("NumpadPgDn")) {  ; NumpadEnd - 35, NumpadPgDn - 34
             SelectedRowNumber := Window_Found_Count
             LV_Modify(SelectedRowNumber, "Select Vis Focus")
             Return
@@ -515,6 +545,7 @@ ListViewEvent:
             ;~ PrintKV("Selecting SelectedRowNumber", SelectedRowNumber)
             ;~ LV_Modify(SelectedRowNumber, "Select Vis Focus")
             Gosub, DisplayList
+            WinActivate, ahk_id %MainWindowHwnd%
             Return
         }
         
