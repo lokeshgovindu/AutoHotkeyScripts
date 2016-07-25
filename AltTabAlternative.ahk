@@ -46,6 +46,7 @@ o-----------------------------------------------------------------------------o
 |                                                                             |
 | TODO Tasks:                                                                 |
 | -----------                                                                 |
+| * Alt+Esc to be handled                                                     |
 | * Ctrl+Num to activate the window(num) directly and close Alt+Tab window    |
 |                                                                             |
 o-----------------------------------------------------------------------------o
