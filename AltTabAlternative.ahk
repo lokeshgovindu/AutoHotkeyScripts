@@ -374,8 +374,8 @@ DisplayList:
 
     GuiControl, +Redraw, ListView1
     ;~ PrintKV("[DisplayList] SelectedRowNumber", SelectedRowNumber)
-    ;~ LV_Modify(SelectedRowNumber, "Select Vis Focus") ; Get selected row and ensure selection & focus is visible
-    LV_Modify(1, "Select Vis Focus") ; Get selected row and ensure selection & focus is visible
+    LV_Modify(SelectedRowNumber, "Select Vis Focus") ; Get selected row and ensure selection & focus is visible
+    ;~ LV_Modify(1, "Select Vis Focus") ; Get selected row and ensure selection & focus is visible
 
     ; TURN ON INCREMENTAL SEARCH
     SetTimer, tIncrementalSearch, 500
@@ -427,14 +427,15 @@ ConstructWindowsList:
             }
         }
     }
+    PrintKV("Window_Found_Count", Window_Found_Count)
 Return
 
 ;========================================================================================================
 
 ListViewEvent:
     Critical, 50
-    PrintSub("ListViewEvent")
-    Print("A_GuiEvent = " . A_GuiEvent)
+    ;~ PrintSub("ListViewEvent")
+    ;~ Print("A_GuiEvent = " . A_GuiEvent)
     if A_GuiEvent = DoubleClick     ; DoubleClick
     {
         LV_GetText(RowText, A_EventInfo)
@@ -502,14 +503,18 @@ ListViewEvent:
             windowID := Window%SelectedRowNumber%
             Print("Activating windowID = " . windowID)
             Print("Activating windowTitle = " . WindowTitle%SelectedRowNumber%)
-            WinClose, ahk_id %windowID%
+            WinClose, ahk_id %windowID%, , 100
             LV_Delete(SelectedRowNumber)
+
             if (SelectedRowNumber = Window_Found_Count) {
                 SelectedRowNumber := Window_Found_Count - 1
             }
-            PrintKV("Selecting SelectedRowNumber", SelectedRowNumber)
-            LV_Modify(SelectedRowNumber, "Select Vis Focus")
-            Gosub, ConstructWindowsList
+
+            ;~ Gosub, ConstructWindowsList
+            ;~ PrintKV("After ConstructWindowsList Window_Found_Count", Window_Found_Count)
+            ;~ PrintKV("Selecting SelectedRowNumber", SelectedRowNumber)
+            ;~ LV_Modify(SelectedRowNumber, "Select Vis Focus")
+            Gosub, DisplayList
             Return
         }
         
@@ -518,14 +523,16 @@ ListViewEvent:
         if ((vkCode >= 65 && vkCode <= 90) || (vkCode >= 48 && vkCode <= 57)) {
             ;~ Print("Key is alnum")
             NewSearchString := NewSearchString . key
+            SelectedRowNumber := 1
         }        
         else if (vkCode = 8) { ; Backspace
             ;~ Print("Key is Backspace")
             NewSearchString := SubStr(NewSearchString, 1, StrLen(NewSearchString) - 1)
+            SelectedRowNumber := 1
         }
         ;~ PrintKV("[ListViewEvent] NewSearchString", NewSearchString)
         ;~ SB_SetText("SearchString: " . NewSearchString)
-        ;~ ControlSetText, Static1, Search String: %NewSearchString%
+        ControlSetText, Static1, Search String: %NewSearchString%
     }
 Return
 
