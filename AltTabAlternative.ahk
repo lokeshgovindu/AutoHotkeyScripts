@@ -25,19 +25,27 @@ o-----------------------------------------------------------------------------o
 | Down                 | Move selection to next row                           |
 |----------------------+------------------------------------------------------|
 | Del                  | Terminate currently selected process                 |
+| Shift+Del            | Forcefully terminate currently selected process      |
 |----------------------+------------------------------------------------------|
-| AlphaNumeric         | Filter windows while typing                          |
+| AlphaNumeric         | Filter windows while typing, can delete last typed   |
+|                      | char using backspace.                                |
+|                      | Search string is displayed on static control.        |
 |-----------------------------------------------------------------------------|
+|                                                                             |
+| Credits:                                                                    |
+| --------                                                                    |
+| * Icon Designed by                                                          |
+|   http://www.freepik.com/ and distributed by www.flaticon.com               |
 |                                                                             |
 | Known issues:                                                               |
 | -------------                                                               |
-| * Lost focus from main window when Del key was pressed on unsaved document  |
-|   Window, user has to respond to the Save/Don't Save/Cancel dialog then     |
-|   only Alt+Tab window can be closed from Pop up window menu (Alt+Space)     |
+| * Process is terminated on pressing Del key instead of default action on    |
+|   that window. Ex: Skype, Cicso Jabber.                                     |
+| * SearchString is "empty" initially, when you press Alt+Tab & Alt+Shift+Tab |
+|   search string becomes "". (here quotes for clarity)                       |
 |                                                                             |
 | TODO Tasks:                                                                 |
 | -----------                                                                 |
-| * Shift+Del to forcefully terminate the process                             |
 | * Ctrl+Num to activate the window(num) directly and close Alt+Tab window    |
 |                                                                             |
 o-----------------------------------------------------------------------------o
@@ -67,6 +75,7 @@ NumberBtnValue      := -1
 Window_Found_Count  := 0
 SelectedRowNumber   := 1
 SelectedWinNumber   := 0
+LVE_VkCodePrev       =
 
 ; Icons
 UseLargeIcons       := 1     ; 0 = small icons, 1 = large icons in listview
@@ -149,7 +158,6 @@ Return
 
 InitiateHotkeys:
     PrintSub("InitiateHotkeys")
-    ; Version 2
     AltHotKey       = !
     AltHotKey2      = Alt
     TabHotKey       = Tab
@@ -465,33 +473,55 @@ ListViewEvent:
         key := GetKeyName(Format("vk{:x}", A_EventInfo))
         PrintKV2("A_EventInfo", A_EventInfo, "key", key)
         
+        PrintKV("LVE_VkCodePrev", LVE_VkCodePrev)
         vkCode := A_EventInfo
-        if (vkCode = GetKeyVK("NumpadDown")) {      ; NumpadDown - 40
+        ; NumpadDown - 40
+        if (vkCode = GetKeyVK("NumpadDown")) {
             Gosub, AltTabAlternative
             Return
         }
-        else if (vkCode = GetKeyVK("NumpadUp")) {   ; NumpadUp - 38
+        ; NumpadUp - 38
+        else if (vkCode = GetKeyVK("NumpadUp")) {
             Gosub, AltShiftTabAlternative
             Return
         }
-        else if (vkCode = GetKeyVK("NumpadHome") or vkCode = GetKeyVK("NumpadPgUp")) { ; NumpadHome - 36, NumpadPgUp - 33
+        ; NumpadHome - 36, NumpadPgUp - 33
+        else if (vkCode = GetKeyVK("NumpadHome") or vkCode = GetKeyVK("NumpadPgUp")) {
             SelectedRowNumber = 1
             LV_Modify(SelectedRowNumber, "Select Vis Focus")
             Return
         }
-        else if (vkCode = GetKeyVK("NumpadEnd") or vkCode = GetKeyVK("NumpadPgDn")) {  ; NumpadEnd - 35, NumpadPgDn - 34
+        ; NumpadEnd - 35, NumpadPgDn - 34
+        else if (vkCode = GetKeyVK("NumpadEnd") or vkCode = GetKeyVK("NumpadPgDn")) {
             SelectedRowNumber := Window_Found_Count
             LV_Modify(SelectedRowNumber, "Select Vis Focus")
             Return
         }
         else if (vkCode = GetKeyVK("NumpadDel")) {  ; NumpadDel - 46
-            Print("NumpadDel pressed")
             GetSelectedRowInfo()
             Print("[A_GuiEvent] SelectedRowNumber = " . SelectedRowNumber)
             windowID := Window%SelectedRowNumber%
             Print("Activating windowID = " . windowID)
             Print("Activating windowTitle = " . WindowTitle%SelectedRowNumber%)
-            WinClose, ahk_id %windowID%, , 100
+            
+            ; Focus will be lost from Alt+Tab main window and it may ask to save data
+            ; if we specify a waittime, so it is better to not to wait.
+            if (LVE_VkCodePrev = GetKeyVK("Shift")) {
+                Print("Shift+Del pressed")
+                ;~ WinKill, ahk_id %windowID%
+                procID := PID%SelectedRowNumber%
+                PrintKV("Forcefully kill PID = ", procID)
+                KillCmd := "TASKKILL /PID " . procID . " /T /F"
+                PrintKV("KillCmd", KillCmd)
+                ;~ Run, %ComSpec% /C %KillCmd%
+                RunWait, %KillCmd%, , Hide
+                Print("After executing RunCmd")
+            }
+            else {
+                Print("NumpadDel pressed")
+                WinClose, ahk_id %windowID%
+            }
+
             LV_Delete(SelectedRowNumber)
 
             if (SelectedRowNumber = Window_Found_Count) {
@@ -522,6 +552,8 @@ ListViewEvent:
         ;~ PrintKV("[ListViewEvent] NewSearchString", NewSearchString)
         ;~ SB_SetText("SearchString: " . NewSearchString)
         ControlSetText, Static1, Search String: %NewSearchString%
+        
+        LVE_VkCodePrev := vkCode
     }
 Return
 
