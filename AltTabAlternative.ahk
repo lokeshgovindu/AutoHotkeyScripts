@@ -38,8 +38,12 @@ o-----------------------------------------------------------------------------o
 | -------------                                                               |
 | * Process is terminated on pressing Del key instead of default action on    |
 |   that window. Ex: Skype, Cicso Jabber.                                     |
+|                                                                             |
+| Limitations:                                                                |
+| ------------                                                                |
 | * Press Alt+Tab next Alt+Shift+Tab and press Del and observe process killed |
 |   using taskkill command forcefully, actually it shouldn't.                 |
+|                                                                             |
 |                                                                             |
 | TODO Tasks:                                                                 |
 | -----------                                                                 |
@@ -199,9 +203,12 @@ AltTabCommonFunction(direction)
 {
     Global DisplayListShown
     Global Window_Found_Count
+    Global LVE_VkCodePrev
+    
     PrintSub("AltTabCommonFunction")
     PrintKV("direction", direction)
     PrintKV("DisplayListShown", DisplayListShown)
+    
     if (DisplayListShown = 0) {
         Print("--- Test ---")
         Gosub, InitializeDefaults
@@ -212,7 +219,13 @@ AltTabCommonFunction(direction)
     }
 
     ; Check for Alt Up 
-    SetTimer, CheckAltHotkeyUp, 40    
+    SetTimer, CheckAltHotkeyUp, 40
+    
+    ; Reset LVE_VkCodePrev to empty
+    ; When user switching between windows using Alt+Shift+Tab and press Del,
+    ; then should not treat this as Shift+Del (forcefully terminate process)
+    ; So, need to reset LVE_VkCodePrev to empty always while Alt+Shift+Tab
+    LVE_VkCodePrev =
     
     SelectedRowNumber := LV_GetNext(0, "F")
     SelectedRowNumber += direction
