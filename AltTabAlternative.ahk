@@ -31,7 +31,7 @@ o-----------------------------------------------------------------------------o
 |                                                                             |
 | Credits:                                                                    |
 | --------                                                                    |
-| * Icon Designed by                                                          |
+| * Icon Designed By                                                          |
 |   http://www.freepik.com/ and distributed by www.flaticon.com               |
 |                                                                             |
 | Known issues:                                                               |
@@ -41,15 +41,14 @@ o-----------------------------------------------------------------------------o
 |                                                                             |
 | Limitations:                                                                |
 | ------------                                                                |
-| * Press Alt+Tab next Alt+Shift+Tab and press Del and observe process killed |
-|   using taskkill command forcefully, actually it shouldn't.                 |
-|                                                                             |
+| * None                                                                      |
 |                                                                             |
 | TODO Tasks:                                                                 |
 | -----------                                                                 |
 | * Never kill a process that is having explorer.exe as a child.              |
 | * Alt+Esc to be handled.                                                    |
 | * Ctrl+Num to activate the window(num) directly and close Alt+Tab window.   |
+| * Run at startup.                                                           |
 |                                                                             |
 o-----------------------------------------------------------------------------o
 */
@@ -523,10 +522,13 @@ ListViewEvent:
             Print("    exeName = " . exeName)
             explorerName = "explorer.exe"
             
+            IsShiftKeyDown := GetKeyState("Shift", "P") or GetKeyState("Shift")
+            PrintKV("IsShiftKeyDown", IsShiftKeyDown)
+            
             ; Focus will be lost from Alt+Tab main window and it may ask to save data
             ; if we specify a waittime, so it is better to not to wait.
             ; *** Never kill explorer.exe forcefully
-            if (exeName <> "explorer.exe" && LVE_VkCodePrev = GetKeyVK("Shift")) {
+            if (exeName <> "explorer.exe" && IsShiftKeyDown) {
                 Print("Shift+Del pressed")
                 ;~ WinKill, ahk_id %windowID%
                 procID := PID%SelectedRowNumber%
