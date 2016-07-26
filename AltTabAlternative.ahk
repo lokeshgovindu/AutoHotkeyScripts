@@ -198,7 +198,7 @@ Return
 
 RNGuiEscape:
 RNGuiClose:
-    ExitApp
+    Gui, RN: Destroy
 
 RNGuiSize:
 	If (A_EventInfo = 1) ; The window has been minimized.
@@ -229,7 +229,7 @@ Return
 
 HelpGuiEscape:
 HelpGuiClose:
-    ExitApp
+    Gui, Help: Destroy
 
 HelpGuiSize:
 	If (A_EventInfo = 1) ; The window has been minimized.
