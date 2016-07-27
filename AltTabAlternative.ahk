@@ -55,6 +55,8 @@ o-----------------------------------------------------------------------------o
 */
 
 #Include CommonUtils.ahk
+#Include %A_ScriptDir%\AboutDialog.ahk
+
 
 #SingleInstance Force
 #InstallKeybdHook
@@ -68,7 +70,8 @@ WM_KEYUP   := 0x101
 ;========================================================================================================
 ; USER EDITABLE SETTINGS:
 
-ApplicationTitle        := "AltTabAlternative"
+ApplicationName         := "AltTabAlternative"
+ProgramName             := ApplicationName
 HelpFileName            := "AltTabAlternativeHelp.txt"
 ReleaseNotesFileName    := "AltTabAlternativeReleaseNotes.txt"
 CurSearchString         := ""
@@ -162,17 +165,23 @@ Gosub, InitiateHotkeys
 
 ; Menu Stuff
 ; Clear previous entries
-;~ Menu, Tray, NoStandard
+Menu, Tray, NoStandard
+Menu, Tray, Add, About %ProgramName%, AboutHandler
 Menu, Tray, Add
 Menu, Tray, Add, Help, HelpHandler
 Menu, Tray, Add, Release Notes, ReleaseNotesHandler
-Menu, Tray, Add, About, AboutHandler
+Menu, Tray, Add
+Menu, Tray, Add, Exit, ExitHandler
 Return
 
 ;========================================================================================================
 ;========================================================================================================
 
+ExitHandler:
+    ExitApp
+    
 AboutHandler:
+    AboutDialog()
 Return
 
 ReleaseNotesHandler:
@@ -380,7 +389,7 @@ Return
 ShowWindow:
     PrintSub("ShowWindow")
     Gui_vx := GuiCenterX()
-    Gui, 1: Show, AutoSize x%Gui_vx% y%GuiY%, %ApplicationTitle%
+    Gui, 1: Show, AutoSize x%Gui_vx% y%GuiY%, %ProgramName%
     DisplayListShown = 1
 Return
 
