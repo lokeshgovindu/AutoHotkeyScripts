@@ -1,0 +1,38 @@
+              Release Notes for AltTabAlternative Version 2016.1
+
+Introduction
+------------
+AltTabAlternative is a replacement for Alt+Tab/Alt+Shift+Tab functionality.
+
+Use Alt+Tab / Alt+Shift+Tab to bring the main AltTab window, use
+        Tab key to select next row
+  Shift+Tab key to select previous row
+
+
+Installation
+------------
+Just execute the AltTabAlternative and try Alt+Tab / Alt+Shift+Tab.
+
+
+Known Limitations
+-----------------
+- Not handled Alt+Ctrl+Tab
+
+
+Known Issues
+------------
+- Process is terminated on pressing Del key instead of default action on that
+  window. Ex: Skype, Cicso Jabber.
+
+
+Credits:
+--------
+- Icon Designed By http://www.freepik.com/ and distributed by www.flaticon.com
+
+
+-------------------------------------------------------------------------------
+New functionality in 2016.2
+
+
+-------------------------------------------------------------------------------
+Bugs fixed in 2016.2
