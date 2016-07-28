@@ -70,7 +70,14 @@ WM_KEYUP   := 0x101
 ;========================================================================================================
 ; USER EDITABLE SETTINGS:
 
-ApplicationName         := "AltTabAlternative"
+ProductName 	        := "AltTabAlternative"
+ProductVersion 	        := "2016.1"
+ProductPage 	        := "http://alttabalternative.sourceforge.net/"
+AuthorName 		        := "Lokesh Govindu"
+AuthorPage 		        := "http://lokeshgovindu.blogspot.in/"
+AboutDialogText			:= "AltTabAlternative is a small application created in AutoHotkey, an alternative for windows native Alt+Tab switcher."
+
+ApplicationName         := ProductName
 ProgramName             := ApplicationName
 HelpFileName            := "AltTabAlternativeHelp.txt"
 ReleaseNotesFileName    := "AltTabAlternativeReleaseNotes.txt"

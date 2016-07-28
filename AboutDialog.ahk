@@ -13,25 +13,18 @@ o-----------------------------------------------------------------------------o
 AboutDialog()
 {
 	Global
-	AboutDialogWidth := 480
-
-	ProgramName := "AltTabAlternative"
-	ProgramVersion := "2016.1"
-	AuthorName := "Lokesh Govindu"
-	AuthorPage := "http://lokeshgovindu.blogspot.in/"
-
-	Gui AboutDialog: New, , About %ProgramName%
+	Gui AboutDialog: New, , About %ProductName%
 	Gui Margin, 10, 10
 	Gui Font, s11 Norm, Comic Sans MS
-	Gui Add, Link, hWndhAppSysLink vProgNameSysLink, <a href="http://alttabalternative.sourceforge.net/">%ProgramName%</a> Version %ProgramVersion%
+	Gui Add, Link, hWndhAppSysLink vProgNameSysLink, <a href="%ProductPage%">%ProductName%</a> Version %ProductVersion%
 	Gui Add, Link, y+1 hWndhAuthorSysLink vAuthorSysLink, <a href="%AuthorPage%">%AuthorName%</a> (C) 2016
 
 	Gui Font, s11, Lucida Handwriting
-	Gui Add, Text, y+9 w447 r3 c004080 vAboutTextVar, AltTabAlternative is a small application created in AutoHotkey, an alternative for windows native Alt+Tab switcher.
+	Gui Add, Text, y+9 w447 r3 c004080 vAboutTextVar, %AboutDialogText%
 	GroupBox("GB1", "About", 15, 6, "AboutTextVar")
 	Gui Font
 	Gui Add, Button, w75 gBtnOk vBtnOk +Default +Center, OK
-	Gui Show, w%AboutDialogWidth%
+	Gui Show, AutoSize Center
 	Return
 	
 	
@@ -41,9 +34,10 @@ BtnOk:
     Gui, AboutDialog:Hide
 
 AboutDialogGuiSize:
-	MoveControlToHorizontalCenter("ProgNameSysLink", AboutDialogWidth)
-	MoveControlToHorizontalCenter("AuthorSysLink", AboutDialogWidth)
-	MoveControlToHorizontalCenter("BtnOk", AboutDialogWidth)
+	WinGetPos, X, Y, Width, Height, A
+	MoveControlToHorizontalCenter("ProgNameSysLink", Width)
+	MoveControlToHorizontalCenter("AuthorSysLink", Width)
+	MoveControlToHorizontalCenter("BtnOk", Width)
 	GuiControl, Focus, BtnOk
 Return
 
