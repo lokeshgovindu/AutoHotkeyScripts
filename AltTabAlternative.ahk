@@ -177,6 +177,7 @@ Menu, Tray, Add, About %ProgramName%, AboutHandler
 Menu, Tray, Add
 Menu, Tray, Add, Help, HelpHandler
 Menu, Tray, Add, Release Notes, ReleaseNotesHandler
+Menu, Tray, Add, Run at startup, RunAtStartup
 Menu, Tray, Add
 Menu, Tray, Add, Exit, ExitHandler
 Return
@@ -187,6 +188,14 @@ Return
 ExitHandler:
     ExitApp
     
+RunAtStartup:
+	Menu, Tray, Togglecheck, Run at startup
+	IfExist, %A_Startup%/AltTabAlternative.lnk
+		FileDelete, %A_Startup%/AltTabAlternative.lnk
+	else
+        FileCreateShortcut, % H_Compiled ? A_AhkPath : A_ScriptFullPath, %A_Startup%/AltTabAlternative.lnk
+Return
+
 AboutHandler:
     AboutDialog()
 Return
