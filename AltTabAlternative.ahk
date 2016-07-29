@@ -34,29 +34,11 @@ o-----------------------------------------------------------------------------o
 | --------                                                                    |
 | * Icon Designed By                                                          |
 |   http://www.freepik.com/ and distributed by www.flaticon.com               |
-|                                                                             |
-| Known issues:                                                               |
-| -------------                                                               |
-| * Process is terminated on pressing Del key instead of default action on    |
-|   that window. Ex: Skype, Cicso Jabber.                                     |
-|                                                                             |
-| Limitations:                                                                |
-| ------------                                                                |
-| * None                                                                      |
-|                                                                             |
-| TODO Tasks:                                                                 |
-| -----------                                                                 |
-| * Never kill a process that is having explorer.exe as a child.              |
-| * Alt+Esc to be handled.                                                    |
-| * Ctrl+Num to activate the window(num) directly and close Alt+Tab window.   |
-| * Run at startup.                                                           |
-|                                                                             |
 o-----------------------------------------------------------------------------o
 */
 
-#Include CommonUtils.ahk
+#Include %A_ScriptDir%\CommonUtils.ahk
 #Include %A_ScriptDir%\AboutDialog.ahk
-
 
 #SingleInstance Force
 #InstallKeybdHook
@@ -180,6 +162,15 @@ Menu, Tray, Add, Release Notes, ReleaseNotesHandler
 Menu, Tray, Add, Run at startup, RunAtStartup
 Menu, Tray, Add
 Menu, Tray, Add, Exit, ExitHandler
+
+; Check if the application is marked "Run at startup"
+IfExist, %A_Startup%/%ProgramName%.lnk
+{
+	FileDelete, %A_Startup%/%ProgramName%.lnk
+	FileCreateShortcut, % H_Compiled ? A_AhkPath : A_ScriptFullPath, %A_Startup%/%ProgramName%.lnk
+	Menu, Tray, Check, Run at startup
+}
+
 Return
 
 ;========================================================================================================
@@ -217,7 +208,7 @@ ReleaseNotesHandler:
     Gui, RN: Margin, 0, 0
     Gui, RN: Add, Edit, w%RNWindowWidth% h%RNWindowHeight% -Wrap Multi HScroll VScroll vRNEditVar hwndhRNEdit +ReadOnly, %FileContents%
 
-    Gui, RN: Show, Maximize
+    Gui, RN: Show, AutoSize Center
 	ControlSend, Edit1, ^{Home}, %A_ThisMenuItem%
 Return
 
@@ -248,7 +239,7 @@ HelpHandler:
     Gui, Help: Margin, 0, 0
     Gui, Help: Add, Edit, w%HelpWindowWidth% h%HelpWindowHeight% -Wrap Multi HScroll VScroll vHelpEditVar hwndhHelpEdit +ReadOnly, %FileContents%
 
-    Gui, Help: Show, Maximize
+    Gui, Help: Show, AutoSize Center
 	ControlSend, Edit1, ^{Home}, %A_ThisMenuItem%
 Return
 
