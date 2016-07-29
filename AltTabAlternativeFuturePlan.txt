@@ -24,3 +24,6 @@ AltTabAlternative Future Plan:
 * Highlight the row in gradient color when mousehover on ListView and display
   - Delete icon at the end of the row (or)
   - Cross (x) mark at the right top of row boundary
+
+* Process is terminated on pressing Del key instead of default action on
+  that process/window. Ex: Skype, Cicso Jabber.
