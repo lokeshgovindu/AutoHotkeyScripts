@@ -1,0 +1,26 @@
+AltTabAlternative Future Plan:
+------------------------------
+
+* Alt+Esc to be handled.
+
+* Display window number in first column and display icon & title in second
+  column.
+
+* Ctrl+Num to activate the window(num) directly and close Alt+Tab window.
+
+* Context Menu to
+   - Terminate a process
+   - Terminate process group
+
+* Status Bar, parts are
+  - ProcessID
+  - ActiveWindowNum/TotalCount
+  - Shift key state (WhiteText: KeyDown, GrayText: KeyUp)
+  Display the descriptive help text on first status bar part on hovering
+  the mouse on remaining SB parts.
+
+* Never kill a process that is having explorer.exe as a child.
+
+* Highlight the row in gradient color when mousehover on ListView and display
+  - Delete icon at the end of the row (or)
+  - Cross (x) mark at the right top of row boundary
