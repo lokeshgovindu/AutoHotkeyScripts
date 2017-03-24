@@ -13,7 +13,7 @@
 ;
 ;  Program : Seek
 ;  Coder   : Phi
-;  Updated : Thu Jun 02 22:02:22 2016
+;  Updated : Mon Jan 31 10:08:37 2005
 ;
 ;  What do you seek, my friend?
 ;
@@ -249,8 +249,12 @@
 ;   in Edit to move the focus from Edit to ListBox.
 ;*****************************************************************
 
+#SingleInstance, Force
+
 ; Include Class_Subclass.ahk to subclass edit
 #Include Class_Subclass.ahk
+
+SetWorkingDir, %A_ScriptDir%
 
 ;**************************
 ;<--- BEGIN OF PROGRAM --->
@@ -331,6 +335,8 @@ IfNotEqual 1, -scex
 	NewKeyPhrase = %PrevKeyPhrase%
 	NewOpenTarget = %PrevOpenTarget%
 
+	;~ Gui, margin, 5 5
+	;~ Gui, Font, s11, Lucida Console
 	; ADD THE TEXT BOX FOR USER TO ENTER THE QUERY STRING
 	Gui, 1:Add, Edit, vFilename HwndFilenameHwnd W600, %NewKeyPhrase%
 
@@ -344,12 +350,12 @@ IfNotEqual 1, -scex
 	Gui, 1:Add, ListBox, vOpenTarget gTargetSelection HwndOpenTargetHwnd X10 Y53 R28 W764 HScroll Disabled, %List%
 
 	; ADD THESE BUTTONS, BUT DISABLE THEM FOR NOW
-	Gui, 1:Add, Button, gButtonOPEN vButtonOPEN Default X10 Y446 Disabled, Open
-	Gui, 1:Add, Button, gButtonOPENDIR vButtonOPENDIR X59 Y446 Disabled, Open Directory
+	Gui, 1:Add, Button, gButtonOPEN vButtonOPEN Default W100 X9 Y446 Disabled, &Open
+	Gui, 1:Add, Button, gButtonOPENDIR vButtonOPENDIR W100 X115 Y446 Disabled, Open &Directory
 	Gui, 1:Add, Button, gButtonSCANSTARTMENU vButtonSCANSTARTMENU X340 Y446 Disabled, Scan Start-Menu
 
 	; ADD THE EXIT BUTTON
-	Gui, 1:Add, Button, gButtonEXIT X743 Y446, Exit
+	Gui, 1:Add, Button, gButtonEXIT W100 X675 Y446, E&xit
 
 	; POP-UP THE QUERY WINDOW
 	Gui, 1:Show, Center, %version%
